@@ -77,9 +77,10 @@ export async function createAccounts(accounts: string[], prefix: string) {
   const accountsToInsert = uniqueAccounts.map((account) => {
     const [authKey, dcId] = account.split(":");
     const username = authKey.slice(0, 32);
+    const uuid = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
 
     const data: any = {
-      accountId: username,
+      accountId: `${username}_${uuid}`,
       dcId: Number(dcId),
       prefix,
     };
@@ -88,21 +89,13 @@ export async function createAccounts(accounts: string[], prefix: string) {
     return data;
   });
 
-  // Удаляем дубликаты по accountId
+  // Удаляем дубликаты по accountId (хотя теперь они должны быть уникальными благодаря UUID)
   const uniqueAccountsToInsert = Array.from(
     new Map(accountsToInsert.map((item) => [item.accountId, item])).values()
   );
 
   if (uniqueAccountsToInsert.length > 0) {
-    const bulkOps = uniqueAccountsToInsert.map((account) => ({
-      updateOne: {
-        filter: { accountId: account.accountId },
-        update: { $setOnInsert: account },
-        upsert: true,
-      },
-    }));
-
-    await accountsCollection.bulkWrite(bulkOps, { ordered: false });
+    await accountsCollection.insertMany(uniqueAccountsToInsert, { ordered: false });
   }
 
   return uniqueAccountsToInsert;

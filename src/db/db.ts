@@ -25,7 +25,7 @@ async function tryConnect(attempt: number = 1): Promise<void> {
   try {
     client = new MongoClient(
       String(
-        "mongodb://gen_user:35B%3DR9GTC%5Cq.Xv@82.97.255.185:27017/core?authSource=admin&directConnection=true"
+        "mongodb://core_f8a4c2e7:xK9mP2vL4wR7nQ3sT8jH6yF5aD1zX0bC@89.23.119.248:27018/core?authSource=admin"
       ),
       options
     );

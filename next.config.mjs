@@ -5,11 +5,11 @@ const nextConfig = {
     responseLimit: false,
   },
   serverActions: {
-    bodySizeLimit: "10mb",
+    bodySizeLimit: "100mb",
   },
   experimental: {
     serverActions: {
-        bodySizeLimit: '10mb',
+        bodySizeLimit: '100mb',
     }
 }
 };

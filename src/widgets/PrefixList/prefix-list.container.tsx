@@ -2,7 +2,6 @@
 
 import { useQuery, useQueryClient } from "react-query";
 import { getAllPrefixes, createPrefix } from "@/src/db/prefix";
-import { checkExistingAccounts } from "@/src/db/accounts";
 import { PrefixList } from "./prefix-list";
 import type { Prefix } from "@/src/@types/Prefix";
 import { useState } from "react";
@@ -27,7 +26,7 @@ interface ValidationResult {
   accounts?: ValidatedAccount[];
 }
 
-const ACCOUNTS_LIMIT = 20000;
+const ACCOUNTS_LIMIT = 50000;
 const ACCOUNT_FORMAT = /^[a-zA-Z0-9]+:[0-9]+$/;
 
 export const PrefixListContainer = () => {
@@ -76,30 +75,14 @@ export const PrefixListContainer = () => {
 
     const parsedAccounts = accountsList.map((account) => {
       const [authKey, dcId] = account.split(":");
-      return { authKey, dcId, slicedAuthKey: authKey.slice(0, 32) };
+      return { authKey, dcId };
     });
-
-    const existingAuthKeys = await checkExistingAccounts(
-      parsedAccounts.map((acc) => acc.slicedAuthKey)
-    );
-
-    const validAccounts = parsedAccounts
-      .filter((acc) => !existingAuthKeys.includes(acc.slicedAuthKey))
-      .map(({ authKey, dcId }) => ({ authKey, dcId }));
-
-    if (validAccounts.length === 0) {
-      return {
-        isValid: false,
-        message: `Все аккаунты уже существуют в системе (${accountsList.length})`,
-        type: "error",
-      };
-    }
 
     return {
       isValid: true,
-      message: `Всего аккаунтов: ${accountsList.length}\n• ${accountsList.length - validAccounts.length} уже в системе\n• ${validAccounts.length} добавится в систему`,
+      message: `Будет добавлено ${accountsList.length} аккаунтов под новым префиксом`,
       type: "warning",
-      accounts: validAccounts,
+      accounts: parsedAccounts,
     };
   };
 
@@ -118,10 +101,7 @@ export const PrefixListContainer = () => {
       await createPrefix(data.prefix, data.description, accountsList);
 
       message.success(
-        `Добавлено ${validation.accounts!.length} новых, пропущено ${
-          data.accounts.trim().split("\n").filter(Boolean).length -
-          validation.accounts!.length
-        } существующих`
+        `Добавлено ${validation.accounts!.length} аккаунтов под префиксом ${data.prefix}`
       );
 
       queryClient.invalidateQueries(["prefixes"]);
